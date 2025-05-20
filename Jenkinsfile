@@ -2,41 +2,42 @@ pipeline {
     agent any
 
     environment {
-        VENV = 'venv'
+        IMAGE_NAME = "supriyadonthula"
+        TAG = "latest"
     }
 
     stages {
-        stage ("Install") {
+        stage('List Files') {
             steps {
-                sh '''
-                    python3 -m venv $VENV
-                    . $VENV/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                sh 'ls -la'
             }
         }
-        stage ("Linting") {
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    echo "This is my Linting Step"
-                }
-            }
-        }
-        stage ("Install Packages") {
-            steps {
-                script {
-                    echo "This is Install PAkcges Step"
-                }
-            }
-        }
-        stage ("Run Application") {
-            steps {
-                script {
-                    echo "This is my Run applcaition Step"
+                    sh "docker build -t $IMAGE_NAME:$TAG ."
                 }
             }
         }
 
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    script {
+                        sh """
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push $IMAGE_NAME:$TAG
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
+        }
     }
 }
