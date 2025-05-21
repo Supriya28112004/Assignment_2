@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "supriyadonthula"
+        IMAGE_NAME = "supriyadonthula/minfy-demo"
         TAG = "latest"
     }
 
